@@ -1,0 +1,18 @@
+# Use a lightweight Python base image
+FROM python:3.11-slim
+
+# Set the working directory
+WORKDIR /app
+
+# Copy the calculator script to the Docker image
+COPY calculator.py .
+
+# Command to run the calculator
+CMD ["python", "calculator.py"]
+
+
+# Build the Docker image
+#docker build -t python-calculator .
+
+# Run the Docker container
+#docker run -it python-calculator
