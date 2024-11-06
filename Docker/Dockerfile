@@ -1,0 +1,35 @@
+# First stage: Build the binary using an Alpine image
+FROM python:3.11-alpine as builder
+
+# Install dependencies for PyInstaller
+RUN apk add --no-cache gcc musl-dev libc-dev
+
+# Install PyInstaller
+RUN pip install pyinstaller
+
+# Set working directory and copy the Python script
+WORKDIR /app
+COPY calculator.py .
+
+# Use PyInstaller to compile the script into a binary
+RUN pyinstaller --onefile calculator.py
+
+# Second stage: Minimal scratch image with only the binary
+FROM scratch
+
+# Copy the compiled binary from the builder stage
+COPY --from=builder /app/dist/calculator /calculator
+
+# Set the default command to run the calculator binary
+
+
+
+# Build the Docker image
+docker build -t python-calculator:tiny .
+
+# Run the Docker container
+docker run -it python-calculator:tiny
+
+
+
+CMD ["/calculator"]
