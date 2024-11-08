@@ -15,5 +15,5 @@ RUN chmod +x /usr/local/bin/deploy_script.sh
 # Expose the default HTTP port (Apache)
 EXPOSE 80
 
-# Run Apache in the foreground to keep the container running
-CMD ["/usr/sbin/apache2ctl", "-D", "FOREGROUND"]
+# Run Apache and the deploy script with arguments
+CMD ["/bin/bash", "/usr/local/bin/deploy_script.sh", "https://www.tooplate.com/zip-templates/2131_wedding_lite.zip", "2131_wedding_lite"]
