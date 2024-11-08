@@ -1,0 +1,37 @@
+#!/bin/bash
+
+# This script updates package lists, installs necessary packages, downloads zip files,
+# extracts their contents, copies them to the web server's root directory, and restarts Apache.
+
+# Update package lists
+echo "Updating package lists..."
+sudo apt update -y
+
+# Install wget, Apache web server, and unzip tool
+echo "Installing wget, Apache, and unzip..."
+sudo apt install wget apache2 unzip -y
+
+# Define URLs for the zip files
+url1="https://www.tooplate.com/zip-templates/2131_wedding_lite.zip"
+url2="https://www.tooplate.com/zip-templates/2132_clean_work.zip"
+
+# Download the zip files if they don't already exist
+echo "Downloading zip files..."
+wget -nc $url1
+wget -nc $url2
+
+# Extract the downloaded files if they were downloaded successfully
+echo "Unzipping downloaded files..."
+unzip -o 2131_wedding_lite.zip -d /tmp/2131_wedding_lite
+unzip -o 2132_clean_work.zip -d /tmp/2132_clean_work
+
+# Copy the contents of the unzipped folders to the Apache web server's root directory
+echo "Copying files to the web server's root directory..."
+sudo cp -r /tmp/2131_wedding_lite/* /var/www/html/
+sudo cp -r /tmp/2132_clean_work/* /var/www/html/
+
+# Restart the Apache service to apply changes
+echo "Restarting Apache..."
+sudo systemctl restart apache2
+
+echo "Deployment completed successfully!"
