@@ -1,0 +1,80 @@
+#!/bin/bash
+
+# Script to install dependencies, set up Apache, and deploy web files from a given URL
+
+# Check if URL and filename arguments are provided
+if [ -z "$1" ] || [ -z "$2" ]; then
+  echo "Usage: $0 <URL> <filename>"
+  echo "Example: $0 https://example.com/webfiles.zip webfiles"
+  exit 1
+fi
+
+# Assign arguments to variables for readability
+URL=$1
+FILENAME=$2
+
+echo "################################################"
+echo "Installing packages."
+echo "################################################"
+
+# Install necessary packages silently
+sudo yum install -y wget httpd unzip vim > /dev/null
+
+echo
+echo "################################################"
+echo "Starting and enabling HTTPD service."
+echo "################################################"
+
+# Start and enable the Apache HTTP server
+sudo systemctl start httpd
+sudo systemctl enable httpd
+
+echo
+echo "################################################"
+echo "Downloading and deploying web files."
+echo "################################################"
+
+# Create a temporary directory for downloading files
+mkdir -p /tmp/webfiles
+cd /tmp/webfiles
+
+# Download the zip file from the provided URL
+wget $URL -O "$FILENAME.zip" > /dev/null
+
+# Check if the download was successful
+if [ $? -ne 0 ]; then
+  echo "Error: Failed to download file from $URL."
+  exit 1
+fi
+
+# Unzip the downloaded file, assuming it's a .zip file with the given name
+unzip "$FILENAME.zip" > /dev/null
+
+# Check if the unzip was successful
+if [ $? -ne 0 ]; then
+  echo "Error: Failed to unzip $FILENAME.zip."
+  exit 1
+fi
+
+# Copy the extracted files to Apache's root directory
+sudo cp -r "$FILENAME"/* /var/www/html/ > /dev/null
+
+echo
+echo "################################################"
+echo "Restarting Apache HTTP server."
+echo "################################################"
+
+# Restart the Apache HTTP server to apply changes
+sudo systemctl restart httpd
+
+echo
+echo "################################################"
+echo "Cleaning up temporary files."
+echo "################################################"
+
+# Remove the temporary directory
+rm -rf /tmp/webfiles
+
+echo "################################################"
+echo "Deployment completed successfully!"
+echo "################################################"
