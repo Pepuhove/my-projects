@@ -15,5 +15,5 @@ RUN chmod +x /usr/local/bin/deploy_script.sh
 # Expose the HTTP port
 EXPOSE 80
 
-# Start Apache in the foreground and run the deploy script
-CMD ["/bin/bash", "/usr/local/bin/deploy_script.sh", "https://www.tooplate.com/zip-templates/2131_wedding_lite.zip", "2131_wedding_lite"]
+# Use an entrypoint to pass arguments to the deploy script
+ENTRYPOINT ["/bin/bash", "/usr/local/bin/deploy_script.sh"]
