@@ -1,0 +1,17 @@
+#!/bin/bash
+
+names="wiz pepu lily"
+
+for name in $names; do
+    echo "Looping..."
+    sleep 1
+    echo "#############################"
+    echo "#############################"
+    
+    # Displaying User ID
+    echo "User ID: $(id $name)"
+    echo
+
+    # Adding user to the 'aws' group
+    usermod -aG aws $name
+done
