@@ -1,0 +1,83 @@
+# 1. Combine three lists L1, L2, and L3 into tuples, then find the maximum in each tuple
+L1 = [1, 2, 3, 4]
+L2 = [4, 3, 2, 3]
+L3 = [0, 5, 0, 5]
+
+# Creating a list of tuples by zipping L1, L2, and L3
+tups = [(x, y, z) for x, y, z in zip(L1, L2, L3)]
+# Finding the maximum value in each tuple
+maxs = [max(num) for num in tups]
+
+print(tups)
+print(maxs)
+
+##############################################################################
+
+# 2. Flattening a list of lists into a single list
+L = [["hi", "bye"], ["hello", "goodbye"], ["hola", "adios", "bonjour", "au revoir"]]
+
+# Flattening the nested lists into a single list
+result2 = [item for items in L for item in items]
+
+print(result2)
+
+##############################################################################
+
+# 3. Filtering numbers that are multiples of 3 in a nested list of numbers
+nums = [[4, 3, 12, 10], [8, 7, 6], [5, 18, 15, 7, 11], [9, 4], [24, 20, 17], [3, 5]]
+
+# Finding all numbers divisible by 3 in the nested lists
+threes = [n for num in nums for n in num if n % 3 == 0]
+
+print(threes)
+
+##############################################################################
+
+# 4. Selecting scores of students who passed (score >= 70)
+students = [('Tommy', 95), ('Linda', 63), ('Carl', 70), ('Bob', 100), ('Raymond', 50), ('Sue', 75)]
+
+# Extracting the scores of students who passed
+passed = [scores[1] for scores in students if scores[1] >= 70]
+
+print(passed)
+
+##############################################################################
+
+# 5. Pairing words from two lists if both have more than three characters
+l1 = ['left', 'up', 'front']
+l2 = ['right', 'down', 'back']
+
+# Using list comprehension to create pairs if both words have more than 3 characters
+opposites = [(x, y) for x, y in zip(l1, l2) if len(x) > 3 and len(y) > 3]
+
+print(opposites)
+
+##############################################################################
+
+# 6. Same as above but using filter and lambda
+l1 = ['left', 'up', 'front']
+l2 = ['right', 'down', 'back']
+
+# Using filter() and lambda to get pairs of words longer than 3 characters
+opposites = list(filter(lambda pair: len(pair[0]) > 3 and len(pair[1]) > 3, zip(l1, l2)))
+
+print(opposites)
+
+##############################################################################
+
+# 7. Create a list of tuples with species names and populations, then identify endangered species
+species = ['golden retriever', 'white tailed deer', 'black rhino', 'brown squirrel', 'field mouse', 
+           'orangutan', 'sumatran elephant', 'rainbow trout', 'black bear', 'blue whale', 
+           'water moccasin', 'giant panda', 'green turtle', 'blue jay', 'japanese beetle']
+
+population = [10000, 90000, 1000, 2000000, 500000, 500, 1200, 8000, 12000, 2300, 7500, 100, 1800, 9500, 125000]
+
+# Creating a list of tuples to store each species with its corresponding population
+pop_info = [(specie, pop) for specie, pop in zip(species, population)]
+# Filtering species with populations below 2500 (endangered)
+endangered = [specie[0] for specie in pop_info if specie[1] < 2500]
+
+print(pop_info)
+print(endangered)
+
+##############################################################################
