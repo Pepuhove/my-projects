@@ -1,121 +1,106 @@
 pipeline {
-    
-	agent any
-/*	
-	tools {
-        maven "maven3"
+    agent any
+
+    tools {
+        jdk 'JDK'
+        nodejs 'NodeJS'
     }
-*/	
+
+    parameters {
+        string(name: 'ECR_REPO_NAME', defaultValue: 'amazon-prime', description: 'Enter your ECR_REPOSITORY_NAME: ')
+        string(name: 'AWS_ACCOUNT_ID', defaultValue: '123456789012', description: 'Enter your AWS_ACCOUNT_ID: ')
+    }
+
     environment {
-        NEXUS_VERSION = "nexus3"
-        NEXUS_PROTOCOL = "http"
-        NEXUS_URL = "172.31.40.209:8081"
-        NEXUS_REPOSITORY = "vprofile-release"
-	NEXUS_REPO_ID    = "vprofile-release"
-        NEXUS_CREDENTIAL_ID = "nexuslogin"
-        ARTVERSION = "${env.BUILD_ID}"
-    }
-	
-    stages{
-        
-        stage('BUILD'){
-            steps {
-                sh 'mvn clean install -DskipTests'
-            }
-            post {
-                success {
-                    echo 'Now Archiving...'
-                    archiveArtifacts artifacts: '**/target/*.war'
-                }
-            }
-        }
-
-	stage('UNIT TEST'){
-            steps {
-                sh 'mvn test'
-            }
-        }
-
-	stage('INTEGRATION TEST'){
-            steps {
-                sh 'mvn verify -DskipUnitTests'
-            }
-        }
-		
-        stage ('CODE ANALYSIS WITH CHECKSTYLE'){
-            steps {
-                sh 'mvn checkstyle:checkstyle'
-            }
-            post {
-                success {
-                    echo 'Generated Analysis Result'
-                }
-            }
-        }
-
-        stage('CODE ANALYSIS with SONARQUBE') {
-          
-		  environment {
-             scannerHome = tool 'sonarscanner4'
-          }
-
-          steps {
-            withSonarQubeEnv('sonar-pro') {
-               sh '''${scannerHome}/bin/sonar-scanner -Dsonar.projectKey=vprofile \
-                   -Dsonar.projectName=vprofile-repo \
-                   -Dsonar.projectVersion=1.0 \
-                   -Dsonar.sources=src/ \
-                   -Dsonar.java.binaries=target/test-classes/com/visualpathit/account/controllerTest/ \
-                   -Dsonar.junit.reportsPath=target/surefire-reports/ \
-                   -Dsonar.jacoco.reportsPath=target/jacoco.exec \
-                   -Dsonar.java.checkstyle.reportPaths=target/checkstyle-result.xml'''
-            }
-
-            timeout(time: 10, unit: 'MINUTES') {
-               waitForQualityGate abortPipeline: true
-            }
-          }
-        }
-
-        stage("Publish to Nexus Repository Manager") {
-            steps {
-                script {
-                    pom = readMavenPom file: "pom.xml";
-                    filesByGlob = findFiles(glob: "target/*.${pom.packaging}");
-                    echo "${filesByGlob[0].name} ${filesByGlob[0].path} ${filesByGlob[0].directory} ${filesByGlob[0].length} ${filesByGlob[0].lastModified}"
-                    artifactPath = filesByGlob[0].path;
-                    artifactExists = fileExists artifactPath;
-                    if(artifactExists) {
-                        echo "*** File: ${artifactPath}, group: ${pom.groupId}, packaging: ${pom.packaging}, version ${pom.version} ARTVERSION";
-                        nexusArtifactUploader(
-                            nexusVersion: NEXUS_VERSION,
-                            protocol: NEXUS_PROTOCOL,
-                            nexusUrl: NEXUS_URL,
-                            groupId: pom.groupId,
-                            version: ARTVERSION,
-                            repository: NEXUS_REPOSITORY,
-                            credentialsId: NEXUS_CREDENTIAL_ID,
-                            artifacts: [
-                                [artifactId: pom.artifactId,
-                                classifier: '',
-                                file: artifactPath,
-                                type: pom.packaging],
-                                [artifactId: pom.artifactId,
-                                classifier: '',
-                                file: "pom.xml",
-                                type: "pom"]
-                            ]
-                        );
-                    } 
-		    else {
-                        error "*** File: ${artifactPath}, could not be found";
-                    }
-                }
-            }
-        }
-
-
+        SCANNER_HOME = tool 'SonarQube Scanner'
     }
 
+    stages {
+        stage('1. Git Checkout') {
+            steps {
+                git branch: 'main', url: 'https://github.com/Pepuhove/DevopsProject2.git'
+            }
+        }
 
+        stage('2. SonarQube Analysis') {
+            steps {
+                withSonarQubeEnv('sonar_server') {
+                    sh """
+                    ${SCANNER_HOME}/bin/sonar-scanner \
+                    -Dsonar.projectName=amazon-prime \
+                    -Dsonar.projectKey=amazon-prime
+                    """
+                }
+            }
+        }
+
+        stage('3. SonarQube Quality Gates') {
+            steps {
+                waitForQualityGate abortPipeline: false
+            }
+        }
+
+        stage('4. NPM Install') {
+            steps {
+                sh "npm install"
+            }
+        }
+
+        stage('5. Trivy Scan') {
+            steps {
+                sh "trivy fs . > trivy-scan-results.txt"
+            }
+        }
+
+        stage('6. Docker Image Build') {
+            steps {
+                sh "docker build -t ${params.ECR_REPO_NAME} ."
+            }
+        }
+
+        stage('7. Create ECR Repo') {
+            steps {
+                withCredentials([string(credentialsId: 'access_key', variable: 'AWS_ACCESS_KEY'), string(credentialsId: 'secret_key', variable: 'AWS_SECRET_KEY')]) {
+                    sh """
+                    aws configure set aws_access_key_id $AWS_ACCESS_KEY
+                    aws configure set aws_secret_access_key $AWS_SECRET_KEY
+                    aws ecr describe-repositories --repository-names ${params.ECR_REPO_NAME} --region us-east-1 || \
+                    aws ecr create-repository --repository-name ${params.ECR_REPO_NAME} --region us-east-1
+                    """
+                }
+            }
+        }
+
+        stage('8. Login to ECR & Tag Image') {
+            steps {
+                withCredentials([string(credentialsId: 'access_key', variable: 'AWS_ACCESS_KEY'), string(credentialsId: 'secret_key', variable: 'AWS_SECRET_KEY')]) {
+                    sh """
+                    aws ecr get-login-password --region us-east-1 | docker login --username AWS --password-stdin ${params.AWS_ACCOUNT_ID}.dkr.ecr.us-east-1.amazonaws.com
+                    docker tag ${params.ECR_REPO_NAME}:latest ${params.AWS_ACCOUNT_ID}.dkr.ecr.us-east-1.amazonaws.com/${params.ECR_REPO_NAME}:$BUILD_NUMBER
+                    docker tag ${params.ECR_REPO_NAME}:latest ${params.AWS_ACCOUNT_ID}.dkr.ecr.us-east-1.amazonaws.com/${params.ECR_REPO_NAME}:latest
+                    """
+                }
+            }
+        }
+
+        stage('9. Push Image to AWS ECR') {
+            steps {
+                withCredentials([string(credentialsId: 'access_key', variable: 'AWS_ACCESS_KEY'), string(credentialsId: 'secret_key', variable: 'AWS_SECRET_KEY')]) {
+                    sh """
+                    docker push ${params.AWS_ACCOUNT_ID}.dkr.ecr.us-east-1.amazonaws.com/${params.ECR_REPO_NAME}:$BUILD_NUMBER
+                    docker push ${params.AWS_ACCOUNT_ID}.dkr.ecr.us-east-1.amazonaws.com/${params.ECR_REPO_NAME}:latest
+                    """
+                }
+            }
+        }
+
+        stage('10. Cleanup Image from Jenkins Server') {
+            steps {
+                sh """
+                docker rmi ${params.AWS_ACCOUNT_ID}.dkr.ecr.us-east-1.amazonaws.com/${params.ECR_REPO_NAME}:$BUILD_NUMBER
+                docker rmi ${params.AWS_ACCOUNT_ID}.dkr.ecr.us-east-1.amazonaws.com/${params.ECR_REPO_NAME}:latest
+                """
+            }
+        }
+    }
 }
