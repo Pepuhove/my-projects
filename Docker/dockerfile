@@ -1,1 +1,48 @@
 
+FROM ubuntu:latest
+LABEL "Author"="Pepu"
+LABEL "Project"="nano"
+ENV DEBIAN_FRONTED=noninteractive
+RUN apt update && apt install git -y
+RUN apt install apache2 -y
+CMD ["/usr/sbin/apache2ctl", "-D", "FOREGROUND"]
+EXPOSE 80
+WORKDIR /var/www/html
+VOLUME /var/log/apache2
+ADD nano.tar.gz /var/www/html
+#COPY barista.tar.gz /var/www/html
+
+
+# Use the latest version of Ubuntu as the base image
+FROM ubuntu:latest
+
+# Add metadata about the image
+LABEL "Author"="Pepu"
+LABEL "Project"="nano"
+
+# Set a non-interactive frontend for Debian to avoid prompts during installations
+ENV DEBIAN_FRONTEND=noninteractive
+
+# Update the package list and install Git
+RUN apt update && apt install git -y
+
+# Install Apache2 web server
+RUN apt install apache2 -y
+
+# Set the default command to run Apache in the foreground (keeping the container running)
+CMD ["/usr/sbin/apache2ctl", "-D", "FOREGROUND"]
+
+# Expose port 80 for web traffic
+EXPOSE 80
+
+# Set the working directory for Apache (HTML files will be served from this directory)
+WORKDIR /var/www/html
+
+# Mount a volume for Apache log files (persistent logs)
+VOLUME /var/log/apache2
+
+# Add the contents of barista.tar.gz to the Apache document root
+ADD barista.tar.gz /var/www/html
+
+# Optionally, you could use COPY instead of ADD if you're not extracting a tar file
+#COPY barista.tar.gz /var/www/html
