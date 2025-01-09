@@ -1,0 +1,8 @@
+tupl=("Jun",1994,"sept",1998,)
+print(type(tupl))
+my_tuple=(100,)
+print(type(my_tuple))
+print(my_tuple + tupl)
+print(1994 in tupl)
+print(tupl[1:])
+print(tupl[9-8])

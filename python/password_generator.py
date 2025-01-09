@@ -39,7 +39,7 @@ while True:
         generated_password = ''.join(password)
 
         # Display the generated password
-        print(f'Your password is {generated_password}.')
+        print('Your password is {}'.format(generated_password))
         break  # Exit the loop if the password is generated successfully
 
     # Handle the case where the user enters non-numeric values
