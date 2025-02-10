@@ -27,4 +27,4 @@ jobs:
 
     - name: Read File
       if: steps.check_readme.outcome == 'success'
-      run: cat README.md
+      run: cat README
