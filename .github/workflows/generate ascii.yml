@@ -11,9 +11,10 @@ jobs:
 
     - name: List Repo Files
       run: ls -ltra
-      
+
     - name: Executing Shell Script
-      run: ./ascii_script.sh
+     
+      run: chmod +x ascii_script.sh || ./ascii_script.sh
     
 
     
