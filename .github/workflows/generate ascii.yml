@@ -10,7 +10,7 @@ jobs:
       run: sudo apt-get install cowsay -y
 
     - name: Executing Shell Script
-      run: owsay -f dragon "Run for cover, I am a DRAGON...RAWR" >> dragon.txt
+      run: cowsay -f dragon "Run for cover, I am a DRAGON...RAWR" >> dragon.txt
     
     - name: Sleep for 30 seconds
       run: sleep 30
