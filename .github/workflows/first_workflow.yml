@@ -10,7 +10,7 @@ jobs:
       uses: actions/checkout@v4
       
     - name: Welcome Message
-      run: echo "My First Github Actions"
+      run: echo "My First Github Actions."
 
     - name: List Files
       run: ls
