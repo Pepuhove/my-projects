@@ -10,44 +10,39 @@ jobs:
       run: sudo apt-get install cowsay -y
 
     - name: Executing Shell Script
-      run: cowsay -f dragon "Run for cover, I am a DRAGON...RAWR " >> dragon.txt
+      run: cowsay -f dragon "Run for cover, I am a DRAGON...RAWR" >> dragon.txt
     
     - name: Upload Dragon text file
       uses: actions/upload-artifact@v4
       with:
         name: dragon-text-file
         path: dragon.txt
-    
   
   test_job_2:
     needs: build_job_1
     runs-on: ubuntu-latest
     steps:
-    - name: Upload Dragon text file
+    - name: Download Dragon text file
       uses: actions/download-artifact@v4
       with:
         name: dragon-text-file
-        path: dragon.txt
+        path: .  # Download artifact to the current directory
 
     - name: Test Files Exists
       run: grep -i "dragon" dragon.txt
 
   deploy_job_3:
-      needs: test_job_2
-      runs-on: ubuntu-latest
-      steps:
-      - name: Upload Dragon text file
-        uses: actions/download-artifact@v4
-        with:
-          name: dragon-text-file
-          path: dragon.txt
+    needs: test_job_2
+    runs-on: ubuntu-latest
+    steps:
+    - name: Download Dragon text file
+      uses: actions/download-artifact@v4
+      with:
+        name: dragon-text-file
+        path: .  # Download artifact to the current directory
 
-      - name: Read File
-        run: cat dragon.txt
+    - name: Read File
+      run: cat dragon.txt
 
-      - name: Deploy
-        run: echo "Deploying........"
-  
-      
-        
-      
+    - name: Deploy
+      run: echo "Deploying........"
